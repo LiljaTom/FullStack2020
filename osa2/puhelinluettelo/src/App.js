@@ -59,7 +59,7 @@ const App = () => {
           setColor('green')
         })
         .catch(error => {
-          handleMessages(`Problem adding ${newName}`)
+          handleMessages(error.response.data["error"])
           setColor('red')
         })
     }
@@ -89,7 +89,8 @@ const App = () => {
           setColor('green')
         })
         .catch(error => {
-
+          handleMessages(error.response.data["error"])
+          setColor('red')
         })
     }
   }
