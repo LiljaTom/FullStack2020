@@ -1,32 +1,35 @@
 const bcrypt = require('bcrypt')
-const usersRouter = require('express').Router()
+const router = require('express').Router()
 const User = require('../models/user')
 
-usersRouter.post('/', async(request, response) => {
-    const body = request.body
+router.get('/', async (request, response) => {
+  const users = await User
+    .find({})
+    .populate('blogs', { title: 1, url: 1,  likes: 1, author: 1 })
 
-    if(!body.password) {
-        return response.status(400).json({error: 'password is required'})
-    } else if(body.password.length <= 3) {
-        return response.status(400).json({error: 'password is too short, it needs to be atleast 4 characters'})
-    }
+  response.json(users.map(u => u.toJSON()))
+})
 
-    const saltRounds = 10
-    const passwordHash = await bcrypt.hash(body.password, saltRounds)
+router.post('/', async (request, response) => {
+  const { password, name, username } = request.body
 
-    const user = new User({
-        username: body.username,
-        name: body.name,
-        passwordHash,
+  if ( !password || password.length<3 ) {
+    return response.status(400).send({
+      error: 'password must min length 3'
     })
+  }
 
-    const savedUser = await user.save()
-    response.json(savedUser)
+  const saltRounds = 10
+  const passwordHash = await bcrypt.hash(password, saltRounds)
+
+  const user = new User({
+    username, name,
+    passwordHash,
+  })
+
+  const savedUser = await user.save()
+
+  response.json(savedUser)
 })
 
-usersRouter.get('/', async(request, response) => {
-    const users = await User.find({}).populate('blogs', {url: 1, title: 1, author: 1, id: 1})
-    response.json(users.map(user => user.toJSON()))
-})
-
-module.exports = usersRouter
+module.exports = router
